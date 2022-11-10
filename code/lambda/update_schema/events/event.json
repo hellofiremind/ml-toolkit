@@ -1,0 +1,49 @@
+{
+  "CodePipeline.job": {
+    "id": "",
+    "accountId": "",
+    "data": {
+      "actionConfiguration": {
+        "configuration": {
+          "FunctionName": ""
+        }
+      },
+      "inputArtifacts": [
+        {
+          "name": "ml_step_function_output",
+          "revision": "None",
+          "location": {
+            "type": "S3",
+            "s3Location": {
+              "bucketName": "",
+              "objectKey": ""
+            }
+          }
+        }
+      ],
+      "outputArtifacts": [
+        {
+          "name": "update_schema_output",
+          "revision": "None",
+          "location": {
+            "type": "S3",
+            "s3Location": {
+              "bucketName": "",
+              "objectKey": ""
+            }
+          }
+        }
+      ],
+      "artifactCredentials": {
+        "accessKeyId": "",
+        "secretAccessKey": "",
+        "sessionToken": "",
+        "expirationTime": 0
+      },
+      "encryptionKey": {
+        "id": "",
+        "type": "KMS"
+      }
+    }
+  }
+}

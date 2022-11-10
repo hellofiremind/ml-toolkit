@@ -1,0 +1,125 @@
+name: serverless-command-workflow
+
+on:
+  workflow_call:
+    inputs:
+      base:
+        required: false
+        type: string
+        default: 'development'
+      destroy:
+        required: false
+        type: string
+        default: 'false'
+
+    secrets:
+      AWS_REGION:
+        required: true
+      # ACTION_IAM_ROLE:
+      #   required: true
+
+jobs:
+  run_sls_command:
+    if: ${{ inputs.destroy == 'false' }}
+    runs-on: ubuntu-latest
+    env:
+      BUILD_STAGE: ${{ github.ref_name }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      SERVICE: ml-core
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+  #     - name: Configure AWS Credentials
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         role-to-assume: ${{ secrets.ACTION_IAM_ROLE }}
+  #         role-session-name: GithubActionsDeployML
+  #         aws-region: ${{ env.AWS_REGION }}
+
+  #     - name: Set up Python 3.9
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: 3.9
+
+  #     - name: Check Code Changes
+  #       id: changed-files-specific
+  #       uses: tj-actions/changed-files@v33
+  #       with:
+  #         files: |
+  #           .github/workflows/serverless-command.yml
+  #           serverless.yml
+  #           code/lambda/*/*.py
+  #           code/lambda/*/*.toml
+
+  #     - name: Install poetry
+  #       run: |
+  #         pip install -U pip
+  #         pip install poetry
+  #       env:
+  #         POETRY_VIRTUALENVS_CREATE: false
+
+  #     - name: Generate requirements
+  #       #        if: steps.changed-files-specific.outputs.any_changed == 'true'
+  #       run: bash deployment-scripts/generate-requirements.sh
+
+  #     - name: Install serverless Plugins
+  #       run: |-
+  #         npm install -g serverless
+  #         serverless plugin install -n serverless-python-requirements
+  #         serverless plugin install -n serverless-offline
+  #         serverless plugin install -n serverless-deployment-bucket
+  #         npm install --dev serverless-better-credentials
+
+
+  #     - name: Deploy Serverless
+  #       run: |-
+  #         npx serverless package --stage ${{ env.BUILD_STAGE }} --region ${{ secrets.AWS_REGION }}
+  #         npx serverless deploy --stage ${{ env.BUILD_STAGE }} --region ${{ secrets.AWS_REGION }}
+  #       env:
+  #         SERVICE: ml-core
+  #         BUILD_STAGE: ${{ env.BUILD_STAGE }}
+  #         AWS_REGION: ${{ secrets.AWS_REGION }}
+
+
+  # destroy_sls_command:
+  #   if: ${{ inputs.destroy == 'true' }}
+  #   runs-on: ubuntu-latest
+
+  #   env:
+  #     BUILD_STAGE: ${{ github.ref_name }}
+  #     AWS_REGION: ${{ secrets.AWS_REGION }}
+  #     SERVICE: ml-core
+
+  #   permissions:
+  #     id-token: write
+  #     contents: read
+
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+
+  #     - name: Configure AWS Credentials
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         role-to-assume: ${{ secrets.ACTION_IAM_ROLE }}
+  #         role-session-name: GithubActionsDeployML
+  #         aws-region: ${{ env.AWS_REGION }}
+
+  #     - name: Install serverless Plugins
+  #       run: |-
+  #         npm install -g serverless
+  #         serverless plugin install -n serverless-python-requirements
+  #         serverless plugin install -n serverless-offline
+  #         serverless plugin install -n serverless-deployment-bucket
+  #         npm install --dev serverless-better-credentials
+
+  #     - name: Destroy Serverless
+  #       run: |
+  #         echo "Destroy: ${{ inputs.destroy }}"
+  #         npx serverless remove --stage ${{ env.BUILD_STAGE }} --region ${{ secrets.AWS_REGION }}

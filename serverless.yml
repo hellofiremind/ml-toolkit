@@ -1,0 +1,52 @@
+service: ml-core
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.9
+  architecture: x86_64
+  stage: ${env:BUILD_STAGE, 'development'}
+  region: ${env:AWS_REGION, 'eu-west-1'}
+  timeout: 600
+  role: ${ssm:/${self:custom.service}/${self:provider.stage}/lambda_iam_role}
+  deploymentBucket:
+    name: ${ssm:/${self:custom.service}/${self:provider.stage}/serverless_bucket}
+    serverSideEncryption: aws:kms
+
+custom:
+  service: ${env:SERVICE, 'ml-core'}
+
+
+functions:
+  lambdaCreateSchema:
+    module: code/lambda/create_schema
+    handler: function.handler
+    name: ${ssm:/${self:custom.service}/${self:provider.stage}/create_schema_lambda_name}
+    memorySize: 1000
+    environment:
+      KMS_KEY_ID: ${ssm:/${self:custom.service}/${self:provider.stage}/kms_key}
+      MACHINE_LEARNING_BUCKET: ${ssm:/${self:custom.service}/${self:provider.stage}/ml_pipeline_bucket}
+      SOURCE_BUCKET: ${ssm:/${self:custom.service}/${self:provider.stage}/source_bucket}
+
+  lambdaUpdateSchema:
+    module: code/lambda/update_schema
+    handler: function.handler
+    name: ${ssm:/${self:custom.service}/${self:provider.stage}/update_schema_lambda_name}
+    memorySize: 1000
+    environment:
+      KMS_KEY_ID: ${ssm:/${self:custom.service}/${self:provider.stage}/kms_key}
+
+
+package:
+  individually: true
+  patterns:
+    - '!./src/**/**/poetry.lock'
+    - '!./src/**/**/pyproject.toml'
+    - './src/**/**'
+  excludeDevDependencies: true
+
+plugins:
+  - serverless-python-requirements
+  - serverless-offline
+  - serverless-deployment-bucket
+  - serverless-better-credentials

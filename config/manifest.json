@@ -1,0 +1,23 @@
+{
+  "InstanceType": "",
+  "ProcessingJobName": "",
+  "ProcessingImageUri": "",
+  "ProcessingInputLocation": "",
+  "ProcessingTrainLocation": "",
+  "ProcessingTestLocation": "",
+  "ProcessingModelLocation": "",
+  "TrainingJobName": "",
+  "TrainingImageUri": "",
+  "TrainingOutputLocation": "",
+  "TrainingHyperParameters": "",
+  "EvaluationJobName": "",
+  "EvaluationOutputLocation": "",
+  "ModelName": "",
+  "InferenceInputLocation": "",
+  "InferenceOutputLocation": "",
+  "SageMakerSubmitDirectory": "",
+  "ProcessingCodeUri": "",
+  "TrainingCodeUri": "",
+  "InferenceImageUri": "",
+  "EvaluationCodeUri": ""
+}

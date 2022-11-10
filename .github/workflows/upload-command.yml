@@ -1,0 +1,54 @@
+name: upload-command-workflow
+
+on:
+  workflow_call:
+    secrets:
+      AWS_REGION:
+        required: true
+      # ACTION_IAM_ROLE:
+      #   required: true
+
+jobs:
+  run_sls_command:
+    runs-on: ubuntu-latest
+
+    env:
+      TF_VAR_BUILD_STAGE: ${{ github.ref_name }}
+      TF_VAR_AWS_REGION: ${{ secrets.AWS_REGION }}
+      TF_VAR_SERVICE: ml-core
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     role-to-assume: ${{ secrets.ACTION_IAM_ROLE }}
+      #     role-session-name: GithubActionsDeployML
+      #     aws-region: ${{ env.TF_VAR_AWS_REGION }}
+
+      # - name: Check Code Changes
+      #   id: changed-worflow-files
+      #   uses: tj-actions/changed-files@v33
+      #   with:
+      #     files: |
+      #       code/workflow/**
+      #       config/manifest.json
+
+      # - name: Get SSM Source Bucket
+      #   if: steps.changed-worflow-files.outputs.any_changed == 'true'
+      #   uses: marvinpinto/action-inject-ssm-secrets@v1.2.1
+      #   with:
+      #     ssm_parameter: "/${{ env.TF_VAR_SERVICE }}/${{ env.TF_VAR_BUILD_STAGE }}/source_bucket"
+      #     env_variable_name: "SOURCE_BUCKET"
+
+      # - name: Upload Source Files
+      #   if: steps.changed-worflow-files.outputs.any_changed == 'true'
+      #   run: |
+      #     SOURCE_BUCKET=${{ env.SOURCE_BUCKET }} bash deployment-scripts/upload-source-files.sh
+          

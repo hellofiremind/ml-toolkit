@@ -1,0 +1,42 @@
+name: 'main'
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - development
+  pull_request:
+    types:
+      - closed
+    branches:
+      - staging
+      - production
+jobs:
+  plan:
+    uses: ./.github/workflows/terraform-command.yml
+    with:
+      command: 'plan'
+    secrets: inherit
+
+  apply-tf:
+    if: github.event.pull_request.merged == true || github.ref == 'refs/heads/development'
+    needs: [ plan ]
+    uses: ./.github/workflows/terraform-command.yml
+    with:
+      command: 'apply -auto-approve'
+    secrets: inherit
+
+  upload-source:
+    if: github.event.pull_request.merged == true || github.ref == 'refs/heads/development'
+    needs: [ apply-tf ]
+    uses: ./.github/workflows/upload-command.yml
+    secrets: inherit
+
+  apply-sls:
+    if: github.event.pull_request.merged == true || github.ref == 'refs/heads/development'
+    needs: [ apply-tf ]
+    uses: ./.github/workflows/serverless-command.yml
+    with:
+      destroy: 'false'
+    secrets: inherit
+
+

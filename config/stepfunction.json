@@ -1,0 +1,335 @@
+{
+  "StartAt": "Is Batch?",
+  "States": {
+    "Is Batch?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.BatchOnly",
+          "StringEquals": "True",
+          "Next": "SageMaker Create Transform Job"
+        }
+      ],
+      "Default": "SageMaker Start PreProcessing"
+    },
+    "SageMaker Start PreProcessing": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sagemaker:createProcessingJob.sync",
+      "Parameters": {
+        "ProcessingJobName.$": "$.ProcessingJobName",
+        "RoleArn": "${sagemaker_role_arn}",
+        "ProcessingResources": {
+          "ClusterConfig": {
+            "InstanceCount": 1,
+            "InstanceType.$": "$.InstanceType",
+            "VolumeSizeInGB": 5
+          }
+        },
+        "AppSpecification": {
+          "ImageUri.$": "$.ProcessingImageUri",
+          "ContainerEntrypoint": [
+            "python3",
+            "/opt/ml/processing/input/code/preprocess.py"
+          ]
+        },
+        "ProcessingInputs": [
+          {
+            "InputName": "input",
+            "AppManaged": false,
+            "S3Input": {
+              "S3Uri.$": "$.ProcessingInputLocation",
+              "LocalPath": "/opt/ml/processing/input",
+              "S3DataType": "S3Prefix",
+              "S3InputMode": "File",
+              "S3DataDistributionType": "FullyReplicated",
+              "S3CompressionType": "None"
+            }
+          },
+          {
+            "InputName": "code",
+            "AppManaged": false,
+            "S3Input": {
+              "S3Uri.$": "$.ProcessingCodeUri",
+              "LocalPath": "/opt/ml/processing/input/code",
+              "S3DataType": "S3Prefix",
+              "S3InputMode": "File",
+              "S3DataDistributionType": "FullyReplicated",
+              "S3CompressionType": "None"
+            }
+          }
+        ],
+        "ProcessingOutputConfig": {
+          "Outputs": [
+            {
+              "OutputName": "scaler_model",
+              "AppManaged": false,
+              "S3Output": {
+                "S3Uri.$": "$.ProcessingModelLocation",
+                "LocalPath": "/opt/ml/processing/scaler_model",
+                "S3UploadMode": "EndOfJob"
+              }
+            },
+            {
+              "OutputName": "train",
+              "AppManaged": false,
+              "S3Output": {
+                "S3Uri.$": "$.ProcessingTrainLocation",
+                "LocalPath": "/opt/ml/processing/train",
+                "S3UploadMode": "EndOfJob"
+              }
+            },
+            {
+              "OutputName": "test",
+              "AppManaged": false,
+              "S3Output": {
+                "S3Uri.$": "$.ProcessingTestLocation",
+                "LocalPath": "/opt/ml/processing/test",
+                "S3UploadMode": "EndOfJob"
+              }
+            }
+          ]
+        }
+      },
+      "ResultSelector": {
+        "ProcessingJobStatus.$": "$.ProcessingJobStatus",
+        "ProcessingJobName.$": "$.ProcessingJobName"
+      },
+      "ResultPath": "$.ProcessingJobOutput",
+      "Next": "SageMaker Start Training Job"
+    },
+    "SageMaker Start Training Job": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sagemaker:createTrainingJob.sync",
+      "Parameters": {
+        "TrainingJobName.$": "$.TrainingJobName",
+        "ResourceConfig": {
+          "InstanceCount": 1,
+          "InstanceType.$": "$.InstanceType",
+          "VolumeSizeInGB": 30
+        },
+        "HyperParameters.$": "States.StringToJson($.TrainingHyperParameters)",
+        "AlgorithmSpecification": {
+          "TrainingImage.$": "$.TrainingImageUri",
+          "TrainingInputMode": "File"
+        },
+        "OutputDataConfig": {
+          "S3OutputPath.$": "$.TrainingOutputLocation"
+        },
+        "StoppingCondition": {
+          "MaxRuntimeInSeconds": 3600
+        },
+        "RoleArn": "${sagemaker_role_arn}",
+        "InputDataConfig": [
+          {
+            "ChannelName": "train",
+            "ContentType": "text/csv",
+            "DataSource": {
+              "S3DataSource": {
+                "S3DataType": "S3Prefix",
+                "S3Uri.$": "$.ProcessingTrainLocation",
+                "S3DataDistributionType": "FullyReplicated"
+              }
+            },
+            "InputMode": "File"
+          },
+          {
+            "ChannelName": "test",
+            "ContentType": "text/csv",
+            "DataSource": {
+              "S3DataSource": {
+                "S3DataType": "S3Prefix",
+                "S3Uri.$": "$.ProcessingTestLocation",
+                "S3DataDistributionType": "FullyReplicated"
+              }
+            },
+            "InputMode": "File"
+          }
+        ]
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "SageMaker.AmazonSageMakerException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 0,
+          "BackoffRate": 1.1
+        },
+        {
+          "ErrorEquals": [
+            "SageMaker.ResourceLimitExceededException"
+          ],
+          "IntervalSeconds": 60,
+          "MaxAttempts": 0,
+          "BackoffRate": 1
+        },
+        {
+          "ErrorEquals": [
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 0,
+          "BackoffRate": 1
+        }
+      ],
+      "ResultSelector": {
+        "TrainingJobStatus.$": "$.TrainingJobStatus",
+        "TrainingJobName.$": "$.TrainingJobName",
+        "ModelArtifact.$": "$.ModelArtifacts.S3ModelArtifacts"
+      },
+      "ResultPath": "$.TrainingJobOutput",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.cause",
+          "Next": "Failed"
+        }
+      ],
+      "Next": "SageMaker Start Evaluation"
+    },
+    "SageMaker Start Evaluation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sagemaker:createProcessingJob.sync",
+      "Parameters": {
+        "ProcessingJobName.$": "$.EvaluationJobName",
+        "RoleArn": "${sagemaker_role_arn}",
+        "ProcessingResources": {
+          "ClusterConfig": {
+            "InstanceCount": 1,
+            "InstanceType.$": "$.InstanceType",
+            "VolumeSizeInGB": 5
+          }
+        },
+        "AppSpecification": {
+          "ImageUri.$": "$.TrainingImageUri",
+          "ContainerEntrypoint": [
+            "python3",
+            "/opt/ml/processing/input/code/evaluation.py"
+          ]
+        },
+        "ProcessingInputs": [
+          {
+            "InputName": "input-1",
+            "AppManaged": false,
+            "S3Input": {
+              "S3Uri.$": "$.TrainingJobOutput.ModelArtifact",
+              "LocalPath": "/opt/ml/processing/model",
+              "S3DataType": "S3Prefix",
+              "S3InputMode": "File",
+              "S3DataDistributionType": "FullyReplicated",
+              "S3CompressionType": "None"
+            }
+          },
+          {
+            "InputName": "input-2",
+            "AppManaged": false,
+            "S3Input": {
+              "S3Uri.$": "$.ProcessingTestLocation",
+              "LocalPath": "/opt/ml/processing/test",
+              "S3DataType": "S3Prefix",
+              "S3InputMode": "File",
+              "S3DataDistributionType": "FullyReplicated",
+              "S3CompressionType": "None"
+            }
+          },
+          {
+            "InputName": "code",
+            "AppManaged": false,
+            "S3Input": {
+              "S3Uri.$": "$.EvaluationCodeUri",
+              "LocalPath": "/opt/ml/processing/input/code",
+              "S3DataType": "S3Prefix",
+              "S3InputMode": "File",
+              "S3DataDistributionType": "FullyReplicated",
+              "S3CompressionType": "None"
+            }
+          }
+        ],
+        "ProcessingOutputConfig": {
+          "Outputs": [
+            {
+              "OutputName": "evaluation",
+              "AppManaged": false,
+              "S3Output": {
+                "S3Uri.$": "$.EvaluationOutputLocation",
+                "LocalPath": "/opt/ml/processing/evaluation",
+                "S3UploadMode": "EndOfJob"
+              }
+            }
+          ]
+        }
+      },
+      "ResultSelector": {
+        "EvaluationJobStatus.$": "$.ProcessingJobStatus",
+        "EvaluationJobName.$": "$.ProcessingJobName"
+      },
+      "ResultPath": "$.EvaluationJobOutput",
+      "Next": "SageMaker Create Model"
+    },
+    "SageMaker Create Model": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sagemaker:createModel",
+      "Parameters": {
+        "Containers": [
+          {
+            "Environment": {
+              "SAGEMAKER_PROGRAM": "preprocess.py",
+              "SAGEMAKER_SUBMIT_DIRECTORY.$": "$.SageMakerSubmitDirectory",
+              "SAGEMAKER_CONTAINER_LOG_LEVEL": "20",
+              "SAGEMAKER_REGION": "eu-west-1"
+            },
+            "Image.$": "$.ProcessingImageUri",
+            "ModelDataUrl.$": "States.Format('{}/model.tar.gz', $.ProcessingModelLocation)"
+          },
+          {
+            "Image.$": "$.InferenceImageUri",
+            "ModelDataUrl.$": "$.TrainingJobOutput.ModelArtifact"
+          }
+        ],
+        "ExecutionRoleArn": "${sagemaker_role_arn}",
+        "ModelName.$": "$.ModelName"
+      },
+      "ResultSelector": {
+        "ModelArn.$": "$.ModelArn"
+      },
+      "ResultPath": "$.ModelOutput",
+      "Next": "Succeed"
+    },
+    "SageMaker Create Transform Job": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sagemaker:createTransformJob.sync",
+      "Parameters": {
+        "ModelName.$": "$.ModelName",
+        "TransformInput": {
+          "CompressionType": "None",
+          "ContentType": "text/csv",
+          "DataSource": {
+            "S3DataSource": {
+              "S3DataType": "S3Prefix",
+              "S3Uri.$": "$.InferenceInputLocation"
+            }
+          }
+        },
+        "TransformOutput": {
+          "S3OutputPath.$": "$.InferenceOutputLocation"
+        },
+        "TransformResources": {
+          "InstanceCount": 1,
+          "InstanceType.$": "$.InstanceType"
+        },
+        "TransformJobName.$": "$.TransformJobName"
+      },
+      "Next": "Succeed"
+    },
+    "Succeed": {
+      "Type": "Succeed"
+    },
+    "Failed": {
+      "Type": "Fail",
+      "Cause": "Step Function failed to complete.",
+      "Error": "See Logs."
+    }
+  }
+}

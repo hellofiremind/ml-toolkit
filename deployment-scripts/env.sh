@@ -1,0 +1,7 @@
+ACCOUNT=$(aws sts get-caller-identity | jq -r .Account)
+export TF_VAR_SERVICE="ml-core"
+export TF_VAR_BUILD_STAGE="development"
+S3_TERRAFORM_STATE_REGION="eu-west-1"
+export TF_VAR_STATE_BUCKET="${TF_VAR_SERVICE}-${ACCOUNT}-state-bucket"
+export TF_VAR_AWS_REGION=${S3_TERRAFORM_STATE_REGION}
+S3_TERRAFORM_STATE_KEY="${S3_TERRAFORM_STATE_REGION}/${TF_VAR_SERVICE}/${TF_VAR_BUILD_STAGE}"
