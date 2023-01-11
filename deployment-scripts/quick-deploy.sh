@@ -22,8 +22,8 @@ applyServerless() {
   serverless plugin install -n serverless-deployment-bucket
   npm install --dev serverless-better-credentials
 
-  npx serverless package --stage "${TF_VAR_BUILD_STAGE}" --region "${TF_VAR_AWS_REGION}"
-  npx serverless deploy --stage "${TF_VAR_BUILD_STAGE}" --region "${TF_VAR_AWS_REGION}"
+  AWS_SDK_LOAD_CONFIG=1 npx serverless package --stage "${TF_VAR_BUILD_STAGE}" --region "${TF_VAR_AWS_REGION}"
+  AWS_SDK_LOAD_CONFIG=1 npx serverless deploy --stage "${TF_VAR_BUILD_STAGE}" --region "${TF_VAR_AWS_REGION}"
 }
 
 applyUploadSourceFiles() {

@@ -23,7 +23,7 @@ applyServerless() {
   serverless plugin install -n serverless-deployment-bucket
   npm install --dev serverless-better-credentials
 
-  npx serverless remove --stage "${TF_VAR_BUILD_STAGE}" --region "${TF_VAR_AWS_REGION}"
+  AWS_SDK_LOAD_CONFIG=1 npx serverless remove --stage "${TF_VAR_BUILD_STAGE}" --region "${TF_VAR_AWS_REGION}"
 }
 
 {
