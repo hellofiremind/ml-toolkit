@@ -157,16 +157,17 @@ The framework is currently setup to work with the following example runbook prov
     <li>Modifications can be found in <code>code/lambda/update_schema</code> under <code>update_payload()</code> function.</li>
   </ul>
   </li>
-  <li>Another prompt in CodePipeline will ask the user to verify that the inference data has been uploaded.
+  <li>Another prompt in CodePipeline will ask the user to verify that the inference data has been uploaded. 
   <ul>
     <li>The location in S3 will be <code>{workflow_bucket}{timestamp_of_execution}/inference</code></li>
     <li>Sample file for inference can be found at <code>sample-files/cal_pred.csv</code> which can be uploaded to the above location.</li>
+    <li>Note: This only needs to be uploaded if the EndpointType is configured to <code>Batch</code> instead of <code>SageMaker Endpoint</code>. This can be configured in the <code>update_schema -> update_payload</code> lambda function code.</li>
   </ul>
   </li>
   <li>Finally, the Machine Learning Step Function is invoked with the new payload.
   <ul>
     <li>Batch Transform Job is invoked.</li>
-    <li>Real Time Endpoint - TBA.</li>
+    <li>Real Time Endpoint.</li>
   </ul>
   </li>
   <li>The output of inference can be found: <code>{workflow_bucket}{timestamp_of_execution}/inference/out</code>.</li>

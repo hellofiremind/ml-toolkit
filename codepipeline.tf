@@ -74,7 +74,7 @@ resource "aws_codepipeline" "codepipeline" {
       run_order        = 3
 
       configuration = {
-        StateMachineArn = aws_sfn_state_machine.step_function.arn
+        StateMachineArn = aws_sfn_state_machine.training_step_function.arn
         InputType       = "FilePath"
         Input           = "manifest.json"
       }
@@ -123,12 +123,12 @@ resource "aws_codepipeline" "codepipeline" {
       run_order = 2
 
       configuration = {
-        CustomData = "Please upload inference data to begin inference."
+        CustomData = "Please upload inference data if using Batch Transform."
       }
     }
 
     action {
-      name             = "InvokeMLStepFunctionBatch"
+      name             = "InvokeMLStepFunctionInference"
       category         = "Invoke"
       owner            = "AWS"
       provider         = "StepFunctions"
@@ -138,7 +138,7 @@ resource "aws_codepipeline" "codepipeline" {
       run_order        = 3
 
       configuration = {
-        StateMachineArn = aws_sfn_state_machine.step_function.arn
+        StateMachineArn = aws_sfn_state_machine.inference_step_function.arn
         InputType       = "FilePath"
         Input           = "manifest.json"
       }

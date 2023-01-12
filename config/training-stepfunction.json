@@ -1,17 +1,6 @@
 {
-  "StartAt": "Is Batch?",
+  "StartAt": "SageMaker Start PreProcessing",
   "States": {
-    "Is Batch?": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Variable": "$.BatchOnly",
-          "StringEquals": "True",
-          "Next": "SageMaker Create Transform Job"
-        }
-      ],
-      "Default": "SageMaker Start PreProcessing"
-    },
     "SageMaker Start PreProcessing": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sagemaker:createProcessingJob.sync",
@@ -295,32 +284,6 @@
         "ModelArn.$": "$.ModelArn"
       },
       "ResultPath": "$.ModelOutput",
-      "Next": "Succeed"
-    },
-    "SageMaker Create Transform Job": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::sagemaker:createTransformJob.sync",
-      "Parameters": {
-        "ModelName.$": "$.ModelName",
-        "TransformInput": {
-          "CompressionType": "None",
-          "ContentType": "text/csv",
-          "DataSource": {
-            "S3DataSource": {
-              "S3DataType": "S3Prefix",
-              "S3Uri.$": "$.InferenceInputLocation"
-            }
-          }
-        },
-        "TransformOutput": {
-          "S3OutputPath.$": "$.InferenceOutputLocation"
-        },
-        "TransformResources": {
-          "InstanceCount": 1,
-          "InstanceType.$": "$.InstanceType"
-        },
-        "TransformJobName.$": "$.TransformJobName"
-      },
       "Next": "Succeed"
     },
     "Succeed": {
