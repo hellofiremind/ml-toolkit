@@ -1,7 +1,7 @@
 # SAGEMAKER ROLE
 data "aws_iam_policy_document" "sagemaker_role_policy" {
   statement {
-    sid = "S3"
+    sid     = "S3"
     actions = [
       "s3:Get*",
       "s3:List*",
@@ -18,7 +18,7 @@ data "aws_iam_policy_document" "sagemaker_role_policy" {
   }
 
   statement {
-    sid = "ECR"
+    sid     = "ECR"
     actions = [
       "ecr:*"
     ]
@@ -26,7 +26,7 @@ data "aws_iam_policy_document" "sagemaker_role_policy" {
   }
 
   statement {
-    sid = "CloudwatchLogs"
+    sid     = "CloudwatchLogs"
     actions = [
       "logs:*"
     ]
@@ -36,7 +36,7 @@ data "aws_iam_policy_document" "sagemaker_role_policy" {
   }
 
   statement {
-    sid = "Cloudwatch"
+    sid     = "Cloudwatch"
     actions = [
       "cloudwatch:*",
       "events:*"
@@ -161,16 +161,33 @@ data "aws_iam_policy_document" "step_function_role_policy_attachment" {
       "sagemaker:CreateTrainingJob",
       "sagemaker:CreateTransformJob",
       "sagemaker:CreateModel",
+      "sagemaker:CreateEndpointConfig",
+      "sagemaker:CreateEndpoint",
+      "sagemaker:DescribeEndpoint",
       "sagemaker:AddTags"
     ]
     resources = [
       "arn:aws:sagemaker:${var.AWS_REGION}:${data.aws_caller_identity.current.account_id}:processing-job/*",
       "arn:aws:sagemaker:${var.AWS_REGION}:${data.aws_caller_identity.current.account_id}:training-job/*",
       "arn:aws:sagemaker:${var.AWS_REGION}:${data.aws_caller_identity.current.account_id}:model/*",
-      "arn:aws:sagemaker:${var.AWS_REGION}:${data.aws_caller_identity.current.account_id}:transform-job/*"
+      "arn:aws:sagemaker:${var.AWS_REGION}:${data.aws_caller_identity.current.account_id}:transform-job/*",
+      "arn:aws:sagemaker:${var.AWS_REGION}:${data.aws_caller_identity.current.account_id}:endpoint/*",
+      "arn:aws:sagemaker:${var.AWS_REGION}:${data.aws_caller_identity.current.account_id}:endpoint-config/*"
     ]
   }
 
+
+  statement {
+    sid = "Lambda"
+
+    actions = [
+      "lambda:InvokeFunction"
+    ]
+
+    resources = [
+      "${local.lambda_arn_prefix}:${aws_ssm_parameter.update_endpoint_status_lambda_name.value}"
+    ]
+  }
 }
 
 resource "aws_iam_policy" "step_function_policy" {
@@ -218,10 +235,11 @@ data "aws_iam_policy_document" "lambda_role_policy_attachment" {
   }
 
   statement {
-    sid = "CodePipeline"
+    sid     = "CodePipeline"
     actions = [
       "codepipeline:PutJobFailureResult",
-      "codepipeline:PutJobSuccessResult"
+      "codepipeline:PutJobSuccessResult",
+      "codepipeline:PutApprovalResult"
     ]
     resources = ["*"]
   }
@@ -264,8 +282,9 @@ data "aws_iam_policy_document" "lambda_role_policy_attachment" {
       "*"
     ]
   }
+
   statement {
-    sid = "EC2"
+    sid     = "EC2"
     actions = [
       "ec2:DescribeNetworkInterfaces",
       "ec2:CreateNetworkInterface",
@@ -275,6 +294,31 @@ data "aws_iam_policy_document" "lambda_role_policy_attachment" {
     ]
     resources = ["*"]
   }
+
+  statement {
+    sid = "SSM"
+
+    actions = [
+      "ssm:GetParameter"
+    ]
+
+    resources = [
+      "arn:aws:ssm:${var.AWS_REGION}:${data.aws_caller_identity.current.account_id}:*"
+    ]
+  }
+
+  statement {
+    sid = "SageMaker"
+
+    actions = [
+      "sagemaker:DescribeEndpoint"
+    ]
+
+    resources = [
+      "arn:aws:sagemaker:${var.AWS_REGION}:${data.aws_caller_identity.current.account_id}:endpoint/*",
+    ]
+  }
+
 
 }
 

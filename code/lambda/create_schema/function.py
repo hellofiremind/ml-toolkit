@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import pathlib
 import shutil
@@ -12,6 +13,11 @@ import boto3
 session = boto3.session.Session()
 s3_client = session.client('s3')
 code_pipeline = session.client('codepipeline')
+
+# Set the logger level based on an environment variable
+logger_level = os.getenv('LOGGER_LEVEL', 'INFO').upper()
+logger = logging.getLogger()
+logger.setLevel(logger_level)
 
 KMS_KEY_ID = os.getenv('KMS_KEY_ID')
 MACHINE_LEARNING_BUCKET = os.getenv('MACHINE_LEARNING_BUCKET')
@@ -49,7 +55,6 @@ def update_payload(payload):
     dt_string = now.strftime("%d-%m-%Y-%H-%M")
 
     # Global parameters
-    payload['BatchOnly'] = 'False'
     payload['SageMakerSubmitDirectory'] = f"s3://{SOURCE_BUCKET}/code/sourcedir.tar.gz"
     payload['InstanceType'] = 'ml.m5.xlarge'
 
@@ -121,15 +126,15 @@ def read_manifest(artifact):
 
 def put_job_success(job):
     """Notify CodePipeline of a successful job"""
-    print('CodePipeline Job ID:', job)
+    logger.info(f'CodePipeline Job ID: {job}')
     code_pipeline.put_job_success_result(jobId=job)
-    print('Success')
+    logger.info('Success')
 
 
 def put_job_failure(job, message):
     """Notify CodePipeline of a failed job"""
     code_pipeline.put_job_failure_result(jobId=job, failureDetails={
-                                         'message': message, 'type': 'JobFailed'})
+        'message': message, 'type': 'JobFailed'})
 
 
 def handler(event, context):

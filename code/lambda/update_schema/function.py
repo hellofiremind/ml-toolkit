@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import pathlib
 import shutil
@@ -14,6 +15,11 @@ import boto3
 session = boto3.session.Session()
 s3_client = session.client('s3')
 code_pipeline = session.client('codepipeline')
+
+# Set the logger level based on an environment variable
+logger_level = os.getenv('LOGGER_LEVEL', 'INFO').upper()
+logger = logging.getLogger()
+logger.setLevel(logger_level)
 
 KMS_KEY_ID = os.getenv('KMS_KEY_ID')
 
@@ -48,11 +54,15 @@ def update_payload(payload):
     now = datetime.now()
     dt_string = now.strftime("%d-%m-%Y-%H-%M")
 
-    payload['BatchOnly'] = 'True'
+    payload['EndpointType'] = 'SageMakerEndpoint'
 
     # The name is set here to ensure that if a retry is executed on CodePipline, the transform job is unique to the
     # account
-    payload["TransformJobName"] = f'ml-core-transform-job-{dt_string}'
+    if payload['EndpointType'] == 'Batch':
+        payload["TransformJobName"] = f'ml-core-transform-job-{dt_string}'
+    elif payload['EndpointType'] == 'SageMakerEndpoint':
+        payload["EndpointConfigName"] = f'ml-core-endpoint-config-{dt_string}'
+        payload["EndpointName"] = f'ml-core-endpoint-{dt_string}'
 
     return payload
 
@@ -79,20 +89,20 @@ def read_manifest(artifact):
 
 def put_job_success(job):
     """Notify CodePipeline of a successful job"""
-    print('CodePipeline Job ID:', job)
+    logger.info(f'CodePipeline Job ID: {job}')
     code_pipeline.put_job_success_result(jobId=job)
-    print('Success')
+    logger.info('Success')
 
 
 def put_job_failure(job, message):
     """Notify CodePipeline of a failed job"""
     code_pipeline.put_job_failure_result(jobId=job, failureDetails={
-                                         'message': message, 'type': 'JobFailed'})
+        'message': message, 'type': 'JobFailed'})
 
 
 def handler(event, context):
-    print(event)
     """Lambda handler."""
+    logger.info(event)
     job_id = event['CodePipeline.job']['id']
 
     try:

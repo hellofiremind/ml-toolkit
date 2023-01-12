@@ -1,0 +1,109 @@
+{
+  "StartAt": "Check Endpoint",
+  "States": {
+    "Check Endpoint": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.EndpointType",
+          "StringEquals": "Batch",
+          "Next": "SageMaker Create Transform Job"
+        },
+        {
+          "Variable": "$.EndpointType",
+          "StringEquals": "SageMakerEndpoint",
+          "Next": "SageMaker Create Endpoint Config"
+        }
+      ],
+      "Default": "Failed"
+    },
+    "SageMaker Create Transform Job": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sagemaker:createTransformJob.sync",
+      "Parameters": {
+        "ModelName.$": "$.ModelName",
+        "TransformInput": {
+          "CompressionType": "None",
+          "ContentType": "text/csv",
+          "DataSource": {
+            "S3DataSource": {
+              "S3DataType": "S3Prefix",
+              "S3Uri.$": "$.InferenceInputLocation"
+            }
+          }
+        },
+        "TransformOutput": {
+          "S3OutputPath.$": "$.InferenceOutputLocation"
+        },
+        "TransformResources": {
+          "InstanceCount": 1,
+          "InstanceType.$": "$.InstanceType"
+        },
+        "TransformJobName.$": "$.TransformJobName"
+      },
+      "Next": "Succeed"
+    },
+    "SageMaker Create Endpoint Config": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sagemaker:createEndpointConfig",
+      "Parameters": {
+        "EndpointConfigName.$": "$.EndpointConfigName",
+        "ProductionVariants": [
+          {
+            "InstanceType.$": "$.InstanceType",
+            "InitialInstanceCount": 1,
+            "ModelName.$": "$.ModelName",
+            "VariantName": "Primary"
+          }
+        ]
+      },
+      "ResultSelector": {
+        "EndpointConfigArn.$": "$.EndpointConfigArn"
+      },
+      "ResultPath": "$.SageMakerEndpoint",
+      "Next": "SageMaker Create Endpoint"
+    },
+    "SageMaker Create Endpoint": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sagemaker:createEndpoint",
+      "Parameters": {
+        "EndpointConfigName.$": "$.EndpointConfigName",
+        "EndpointName.$": "$.EndpointName"
+      },
+      "ResultSelector": {
+        "EndpointArn.$": "$.EndpointArn"
+      },
+      "ResultPath": "$.SageMakerEndpoint",
+      "Next": "Update Endpoint Status"
+    },
+    "Update Endpoint Status": {
+      "Type": "Task",
+      "Resource": "${check_endpoint_status_lambda}",
+      "Next": "Check Endpoint Status"
+    },
+    "Check Endpoint Status": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.SageMakerEndpoint.EndpointStatus",
+          "StringEquals": "InService",
+          "Next": "Succeed"
+        }
+      ],
+      "Default": "Wait"
+    },
+    "Wait": {
+      "Type": "Wait",
+      "Seconds": 400,
+      "Next": "Update Endpoint Status"
+    },
+    "Succeed": {
+      "Type": "Succeed"
+    },
+    "Failed": {
+      "Type": "Fail",
+      "Cause": "Step Function failed to complete.",
+      "Error": "See Logs."
+    }
+  }
+}

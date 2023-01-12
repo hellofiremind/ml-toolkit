@@ -24,6 +24,7 @@ functions:
     name: ${ssm:/${self:custom.service}/${self:provider.stage}/create_schema_lambda_name}
     memorySize: 1000
     environment:
+      LOGGER_LEVEL: INFO
       KMS_KEY_ID: ${ssm:/${self:custom.service}/${self:provider.stage}/kms_key}
       MACHINE_LEARNING_BUCKET: ${ssm:/${self:custom.service}/${self:provider.stage}/ml_pipeline_bucket}
       SOURCE_BUCKET: ${ssm:/${self:custom.service}/${self:provider.stage}/source_bucket}
@@ -34,7 +35,16 @@ functions:
     name: ${ssm:/${self:custom.service}/${self:provider.stage}/update_schema_lambda_name}
     memorySize: 1000
     environment:
+      LOGGER_LEVEL: INFO
       KMS_KEY_ID: ${ssm:/${self:custom.service}/${self:provider.stage}/kms_key}
+
+
+  lambdaUpdateEndpointStatus:
+    name: ${ssm:/${self:service}/${self:provider.stage}/update_endpoint_status_lambda_name}
+    module: code/lambda/update_endpoint_status
+    handler: function.handler
+    environment:
+      LOGGER_LEVEL: INFO
 
 
 package:
