@@ -56,7 +56,7 @@ package:
   excludeDevDependencies: true
 
 plugins:
-  - serverless-python-requirements
-  - serverless-offline
-  - serverless-deployment-bucket
   - serverless-better-credentials
+  - serverless-python-requirements
+  - serverless-deployment-bucket
+  - serverless-offline

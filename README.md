@@ -3,20 +3,21 @@
 [Report issue](https://github.com/hellofiremind/ml-toolkit/issues/new?assignees=&labels=&template=bug_report.md&title=) . [Submit a feature](https://github.com/hellofiremind/ml-toolkit/issues/new?assignees=&labels=&template=feature_request.md&title=)
 
 <details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li><a href="#user-content-about-the-project">About The Project</a></li>
-    <li><a href="#initial-setup">Initial Setup</a></li>
-    <ol>
-      <li><a href="#dependencies">Dependencies</a></li>
-      <li><a href="#prerequisites">Pre-requisites</a></li>
-      <li><a href="#deploy-iam-role-and-oidc-identity-provider">Deploy IAM Role and OIDC Identity Provider</a></li>
-      <li><a href="#user-content-github-workflows">GitHub workflows</a></li>
-      <li><a href="#user-content-infastructure-setup">Infrastructure Setup</a></li>
-   </ol>
-    <li><a href="#user-content-sample-workflow-execution-details">Sample Workflow Execution Details</a></li>
-    <li><a href="#user-content-tldr">TL;DR Quick Setup</a></li>
-  </ol>
+<summary>Table of Contents</summary>
+<ol>
+<li><a href="#user-content-about-the-project">About The Project</a></li>
+<li><a href="#initial-setup">Initial Setup</a></li>
+<ol>
+<li><a href="#dependencies">Dependencies</a></li>
+<li><a href="#prerequisites">Pre-requisites</a></li>
+<li><a href="#deploy-iam-role-and-oidc-identity-provider">Deploy IAM Role and OIDC Identity Provider</a></li>
+<li><a href="#user-content-github-workflows">GitHub workflows</a></li>
+<li><a href="#user-content-infrastructure-setup">Infrastructure Setup</a></li>
+<li><a href="#user-content-infrastructure-setup-alternative">Infrastructure Setup (Alternative) - CodePipeline</a></li>
+</ol>
+<li><a href="#user-content-sample-workflow-execution-details">Sample Workflow Execution Details</a></li>
+<li><a href="#user-content-tldr">TL;DR Quick Setup</a></li>
+</ol>
 </details>
 <br />
 
@@ -93,7 +94,7 @@ aws cloudformation deploy --template-file github-oidc-federation-template-infra.
 
 <!-- GITHUB WORKFLOWS -->
 
-### Github Workflows
+### GitHub Workflows
 
 GitHub actions is used to deploy the infrastructure.
 The config for this can be found in the `.gitHub/workflows`
@@ -106,9 +107,9 @@ We send through a variety of different environment variables
 - `AWS_REGION` - Get this from GitHub secrets.
 - `SERVICE` - Has default but can be set by user in the `.github/workflows` files.
 
-<!-- INFASTRUCTURE SETUP -->
+<!-- INFRASTRUCTURE SETUP -->
 
-### Infastructure Setup
+### Infrastructure Setup
 
 For quick setup follow these instructions:
 
@@ -118,7 +119,60 @@ For quick setup follow these instructions:
 
 If you are having any issues please report a bug via the repo.
 
-<!-- SAMPLE WORKFLOW EXECTUTION DETAILS -->
+<!-- INFRASTRUCTURE SETUP ALTERNATIVE -->
+
+### Infrastructure Setup (Alternative) - CodePipeline
+
+If GitHub actions is not the preferred CI/CD of choice then you can deploy using CodePipeline.
+<b>Note</b>: After deployment of the framework you should have two pipelines: The first is the CI/CD pipeline and the second being the framework pipeline.
+
+The Terraform resources for this CI/CD can be found in the `cicd` folder. The following resources are deployed:
+<ul>
+<li>AWS CodePipline</li>
+<li>AWS CodeBuild</li>
+<li>AWS Identity Access Management (IAM)</li>
+<li>AWS Key Management Service (KMS)</li>
+<li>Amazon Simple Storage Service (S3)</li>
+</ul>
+
+Before deployment you must configure some values to ensure the pipeline is connected correctly to your repository.
+<ol>
+<li>Firstly in <code>deployment-scripts/cicd-env.sh</code> you must change these values to match your desired Repo and Branch for CI/CD :</li>
+<ul>
+<li>E.g. <code>TF_VAR_FULL_REPOSITORY_ID="ORG_NAME/REPO_NAME"</code></li>
+<li>E.g. <code>TF_VAR_BRANCH="development"</code></li>
+<li>Optionally you can also modify TF_VAR_CICD_SERVICE</li>
+</ul>
+<li>The following variables can be optionally modified but will work if unchanged. In <code>deployment-scripts/quick-deploy.sh</code>: </li>
+<ul>
+<li>S3_TERRAFORM_STATE_REGION</li>
+<li>TF_VAR_SERVICE</li>
+<li>TF_VAR_BUILD_STAGE</li>
+</ul>
+<li>Finally, ensure you have the correct credentials configured in your terminal for deploying into your AWS account.</li>
+</ol>
+
+To deploy CI/CD Codepipeline, run the following command:
+```
+bash deployment-scripts/deploy-codepipeline.sh
+```
+
+After deployment, navigate to CodePipeline in your AWS Account and select the `'Settings' > 'Connections'` section in the left navigation bar.</p>
+There should be a pending `'github-connection'` which you must update and connect to your GitHub Repo.</p>
+<b>Note:</b> Your GitHub User must have permissions to connect the repo to AWS through CodeStar.</p>
+Once complete, the framework pipeline is ready to use and any changes you make to this repo will be deployed though CI/CD.
+
+To destroy the framework, run the following commands in order:
+
+```
+bash deployment-scripts/quick-destroy.sh
+```
+```
+bash deployment-scripts/destroy-codepipeline.sh
+```
+
+
+<!-- SAMPLE WORKFLOW EXECUTION DETAILS -->
 
 ## Sample Workflow Execution Details
 

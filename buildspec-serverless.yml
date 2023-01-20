@@ -1,0 +1,40 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 16
+      python: 3.9
+    commands:
+      - echo "Setting environment"
+      - npm install
+      - cd "$CODEBUILD_SRC_DIR"
+
+      - echo "Assuming Role"
+      - ASSUME_ROLE_ARN="${IAM_CODEBUILD_ROLE}"
+      - TEMP_ROLE=$(aws sts assume-role --role-arn $ASSUME_ROLE_ARN --role-session-name test)
+      - export TEMP_ROLE
+      - export AWS_ACCESS_KEY_ID=$(echo "${TEMP_ROLE}" | jq -r '.Credentials.AccessKeyId')
+      - export AWS_SECRET_ACCESS_KEY=$(echo "${TEMP_ROLE}" | jq -r '.Credentials.SecretAccessKey')
+      - export AWS_SESSION_TOKEN=$(echo "${TEMP_ROLE}" | jq -r '.Credentials.SessionToken')
+
+      - echo "Setup Poetry"
+      - curl -sSL https://install.python-poetry.org | python3 -
+      - export PATH="/root/.local/bin:$PATH"
+      - echo $(poetry --version)
+
+  build:
+    commands:
+      - echo "Deploying Serverless..."
+      - npx serverless deploy --stage "${BUILD_STAGE}" --region "${AWS_REGION}" --verbose
+  post_build:
+    commands:
+      - echo "Serverless Deploy Complete.."
+
+cache:
+  paths:
+    - node_modules
+
+artifacts:
+  files:
+    - '**/*'
