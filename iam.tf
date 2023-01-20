@@ -1,7 +1,7 @@
 # SAGEMAKER ROLE
 data "aws_iam_policy_document" "sagemaker_role_policy" {
   statement {
-    sid     = "S3"
+    sid = "S3"
     actions = [
       "s3:Get*",
       "s3:List*",
@@ -18,7 +18,7 @@ data "aws_iam_policy_document" "sagemaker_role_policy" {
   }
 
   statement {
-    sid     = "ECR"
+    sid = "ECR"
     actions = [
       "ecr:*"
     ]
@@ -26,7 +26,7 @@ data "aws_iam_policy_document" "sagemaker_role_policy" {
   }
 
   statement {
-    sid     = "CloudwatchLogs"
+    sid = "CloudwatchLogs"
     actions = [
       "logs:*"
     ]
@@ -36,7 +36,7 @@ data "aws_iam_policy_document" "sagemaker_role_policy" {
   }
 
   statement {
-    sid     = "Cloudwatch"
+    sid = "Cloudwatch"
     actions = [
       "cloudwatch:*",
       "events:*"
@@ -176,7 +176,6 @@ data "aws_iam_policy_document" "step_function_role_policy_attachment" {
     ]
   }
 
-
   statement {
     sid = "Lambda"
 
@@ -235,7 +234,7 @@ data "aws_iam_policy_document" "lambda_role_policy_attachment" {
   }
 
   statement {
-    sid     = "CodePipeline"
+    sid = "CodePipeline"
     actions = [
       "codepipeline:PutJobFailureResult",
       "codepipeline:PutJobSuccessResult",
@@ -284,7 +283,7 @@ data "aws_iam_policy_document" "lambda_role_policy_attachment" {
   }
 
   statement {
-    sid     = "EC2"
+    sid = "EC2"
     actions = [
       "ec2:DescribeNetworkInterfaces",
       "ec2:CreateNetworkInterface",

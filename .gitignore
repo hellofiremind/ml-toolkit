@@ -31,6 +31,5 @@ override.tf.json
 .terraform
 code/lambda/*.lock
 code/workflow/*.tar.gz
-package-lock.json
-package.json
 .serverless
+package-lock.json

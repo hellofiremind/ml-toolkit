@@ -1,0 +1,29 @@
+{
+  "name": "ml-toolkit",
+  "version": "1.0.0",
+  "description": "[Report issue](https://github.com/hellofiremind/ml-toolkit/issues/new?assignees=&labels=&template=bug_report.md&title=) . [Submit a feature](https://github.com/hellofiremind/ml-toolkit/issues/new?assignees=&labels=&template=feature_request.md&title=)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hellofiremind/ml-toolkit.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hellofiremind/ml-toolkit/issues"
+  },
+  "homepage": "https://github.com/hellofiremind/ml-toolkit#readme",
+  "dependencies": {
+    "serverless": "^3.26.0",
+    "serverless-better-credentials": "^1.1.3"
+  },
+  "devDependencies": {
+    "serverless-deployment-bucket": "^1.6.0",
+    "serverless-offline": "^12.0.4",
+    "serverless-python-requirements": "^6.0.0"
+  }
+}

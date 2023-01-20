@@ -5,9 +5,6 @@ export AWS_REGION=${TF_VAR_AWS_REGION}
 
 
 applyTerraform() {
-  rm -rf .terraform
-  rm -rf .terraform.lock.hcl
-
   # Create State Bucket
   S3_TERRAFORM_STATE_BUCKET=${TF_VAR_STATE_BUCKET} S3_TERRAFORM_STATE_REGION=${S3_TERRAFORM_STATE_REGION} bash deployment-scripts/create-bucket.sh
 
