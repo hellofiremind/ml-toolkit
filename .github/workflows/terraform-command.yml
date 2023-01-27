@@ -50,7 +50,7 @@ jobs:
 
       - name: tfsec
         if: ${{ inputs.command == 'plan' }}
-        uses: aquasecurity/tfsec-action@v1.0.2
+        uses: aquasecurity/tfsec-action@v1.0.3
         with:
           soft_fail: true
 
