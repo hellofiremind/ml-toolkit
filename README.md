@@ -1,4 +1,4 @@
-# Firemind ML Toolkit Framework
+# Firemind MLOps Toolkit Framework
 
 [Report issue](https://github.com/hellofiremind/ml-toolkit/issues/new?assignees=&labels=&template=bug_report.md&title=) . [Submit a feature](https://github.com/hellofiremind/ml-toolkit/issues/new?assignees=&labels=&template=feature_request.md&title=)
 
@@ -21,10 +21,10 @@
 </details>
 <br />
 
-**TL;DR**: This framework allows you to get started with an <b> ML landing zone</b> on AWS using native services and SageMaker models. The example in this framework uses SageMaker's prebuilt models (Scikit Learn and TensorFlow) with example data from AWS.
+**TL;DR**: This framework allows you to get started with an <b>ML landing zone</b> on AWS using native services and SageMaker models. The example in this framework uses SageMaker's prebuilt models (Scikit Learn and TensorFlow) with example data from AWS.
 
-#### ML Toolkit is part of [Firemind's suite of Ignite](https://firemind.com/offerings/ignite/) tools
-[![Ignite](ignite.png)](https://www.firemind.io/offerings/ignite/ml-core/)
+#### MLOps Toolkit is part of [Firemind's Modern Data Strategy](https://www.firemind.com/modern-data-strategy/) tools
+[![Firemind's Modern Data Strategy](wheel.png)](https://www.firemind.com/modern-data-strategy/)
 
 ### Key AWS Services
 
@@ -41,7 +41,7 @@
 
 ## Infrastructure Diagram
 
-[![Architecture](arch.png)](https://www.firemind.io/offerings/ignite/ml-core/)
+[![Architecture](arch.png)](https://www.firemind.com/modern-data-strategy/)
 
 ## Initial Setup
 
