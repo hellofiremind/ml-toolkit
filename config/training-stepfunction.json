@@ -99,7 +99,11 @@
         "HyperParameters.$": "States.StringToJson($.TrainingHyperParameters)",
         "AlgorithmSpecification": {
           "TrainingImage.$": "$.TrainingImageUri",
-          "TrainingInputMode": "File"
+          "TrainingInputMode": "File",
+          "ContainerEntrypoint": [
+            "python3",
+            "/opt/ml/processing/input/code/train.py"
+          ]
         },
         "OutputDataConfig": {
           "S3OutputPath.$": "$.TrainingOutputLocation"
