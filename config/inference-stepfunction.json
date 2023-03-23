@@ -88,13 +88,18 @@
           "Variable": "$.SageMakerEndpoint.EndpointStatus",
           "StringEquals": "InService",
           "Next": "Succeed"
+        },
+        {
+          "Variable": "$.SageMakerEndpoint.EndpointStatus",
+          "StringEquals": "Failed",
+          "Next": "Failed"
         }
       ],
       "Default": "Wait"
     },
     "Wait": {
       "Type": "Wait",
-      "Seconds": 400,
+      "Seconds": 150,
       "Next": "Update Endpoint Status"
     },
     "Succeed": {

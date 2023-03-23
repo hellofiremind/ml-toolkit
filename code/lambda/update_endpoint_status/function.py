@@ -25,6 +25,8 @@ def handler(event, context):
 
         if response['EndpointStatus'] == 'InService':
             event['SageMakerEndpoint']['EndpointStatus'] = 'InService'
+        elif response['EndpointStatus'] == "Failed":
+            event['SageMakerEndpoint']['EndpointStatus'] = 'Failed'
         else:
             event['SageMakerEndpoint']['EndpointStatus'] = 'NotInService'
 
