@@ -2,7 +2,7 @@ export CWD=$(pwd)
 
 uploadWorkflowScripts() {
   # Creates tar file for Sagemaker Submit Directory
-  (cd code && tar -czvf sourcedir.tar.gz workflow/.)
+  (cd code/workflow && tar -czvf ../sourcedir.tar.gz .)
 
   # This uploads source files
   aws s3 cp "code/workflow/" "s3://${SOURCE_BUCKET}/code/" --recursive
