@@ -3,10 +3,9 @@ data "aws_iam_policy_document" "sagemaker_role_policy" {
   statement {
     sid = "S3"
     actions = [
-      "s3:Get*",
-      "s3:List*",
-      "s3:PutObject",
-      "s3:DeleteObject"
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:ListAllMyBuckets"
     ]
     resources = [
       module.machine_learning_pipeline_bucket.s3_bucket_arn,
@@ -22,6 +21,7 @@ data "aws_iam_policy_document" "sagemaker_role_policy" {
     actions = [
       "ecr:*"
     ]
+    # https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html
     resources = ["*"]
   }
 
@@ -131,7 +131,9 @@ data "aws_iam_policy_document" "step_function_role_policy_attachment" {
     sid = "S3"
 
     actions = [
-      "s3:*"
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:ListBucket" 
     ]
 
     resources = [
@@ -359,9 +361,8 @@ data "aws_iam_policy_document" "codepipeline_policy_document" {
     sid = "S3"
 
     actions = [
-      "s3:Get*",
-      "s3:Put*",
-      "s3:List*"
+      "s3:GetObject",
+      "s3:PutObject"
     ]
 
     resources = [
@@ -378,26 +379,15 @@ data "aws_iam_policy_document" "codepipeline_policy_document" {
     sid = "KMSDecrypt"
 
     actions = [
+      "kms:Encrypt",
       "kms:Decrypt",
       "kms:GenerateDataKey"
     ]
 
     resources = [
-      "*"
-    ]
-  }
-
-  statement {
-    sid = "All"
-
-    actions = [
-      "*"
-    ]
-
-    resources = [
-      "*"
-    ]
-  }
+      aws_kms_key.deployment_key.arn
+          ]
+    }
 }
 
 resource "aws_iam_role_policy_attachment" "codepipeline_role_attachment" {
